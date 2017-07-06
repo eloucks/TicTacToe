@@ -16,6 +16,10 @@ public class Board {
         }
     }
 
+    public Square get(int row, int col){
+        return board[row][col];
+    }
+
     public Board getBoard(){
         return this;
     }

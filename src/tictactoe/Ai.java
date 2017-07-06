@@ -1,34 +1,59 @@
 package tictactoe;
 
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Random;
+
+/*
+* Here is the theoretical order of operations for an optimal winning scenario.
+* 1.) Check if the opponent made a move that is about to let them win. If they are, block them. Optionally, you can insert
+*     logic to prevent them from having a two way win scenario here.
+* 2.) Check if we can win this turn, if we can, win.
+* 3.) Check if we have a 3-set (row, col, or diag) with one of our pieces in it and two remaining open squares. Move there.
+* 4.) Check if we have a 3-set with all open squares. Move there if we do.
+* 5.) If none of the above apply, move randomly.
+*/
+
 
 public class Ai {
     List<Integer[]> moves;
     Board board;
+    Boolean imX;
+    Square me;
+    Square them;
 
-    public Ai(List<Integer[]> moves, Board board){
-        this.moves = moves;
-        this.board = board;
+    public Ai(Boolean imX){
+        this.imX = imX;
+        if (imX){
+            me = Square.X;
+            them = Square.O;
+        } else {
+            me = Square.O;
+            them = Square.X;
+        }
     }
 
-    public Integer[] giveMove(){ //assumes comp is O, not X
-        boolean isEmpty = true;
+    public Integer[] giveMove(Board board){ //assumes Ai is O, not X
+        this.board = board;
+        this.moves = board.openSquares();
+        boolean boardisEmpty = true;
         for (int row = 0; row <3; row++){ // if board is empty always move 0,0
             for (int col = 0; col<3; col++){
                 if (!board.isEmpty(row, col)){
-                    isEmpty = false;
+                    boardisEmpty = false;
                 }
             }
         }
-        if (isEmpty) { return new Integer[]{0,0};}
-
-        ListIterator<Integer[]> itr = moves.listIterator();
+        if (boardisEmpty) { return new Integer[]{0,0};}
+        ListIterator<Integer[]> itr = moves.listIterator(); //get available squares
         Integer[] move = new Integer[2];
+
         while (itr.hasNext()){ //if there is a winning move, take it
             Integer[] ints = itr.next();
-            board.putO(ints[0], ints[1]);
-            if (board.isWinner(Square.O)){
+            putMe(ints[0], ints[1]); //here is issue. still specifying piece
+            if (board.isWinner(me)){
                 board.empty(ints[0], ints[1]);
                 move[0] = ints[0]; move[1] = ints[1];
                 return move;
@@ -38,8 +63,8 @@ public class Ai {
         itr = moves.listIterator(); //reset iterator
         while (itr.hasNext()){ //if the opponent is about to win, stop them.
             Integer[] ints = itr.next();
-            board.putX(ints[0], ints[1]);
-            if (board.isWinner(Square.X)){
+            putThem(ints[0], ints[1]);
+            if (board.isWinner(them)){
                 board.empty(ints[0], ints[1]);
                 move[0] = ints[0]; move[1] = ints[1];
                 return move;
@@ -96,57 +121,57 @@ public class Ai {
 
     private boolean isGreatMove(int row, int col){
         if (row == 0){
-            boolean rowClear = (board.board[0][0] != Square.X && board.board[0][1] != Square.X && board.board[0][2] != Square.X)
-                    && (board.board[0][0] == Square.O || board.board[0][1] == Square.O || board.board[0][2] == Square.O);
+            boolean rowClear = (board.board[0][0] != them && board.board[0][1] != them && board.board[0][2] != them)
+                    && (board.board[0][0] == me || board.board[0][1] == me || board.board[0][2] == me);
             if (rowClear){
                 return true;
             }
         }
         if (row == 1){
-            boolean rowClear = (board.board[1][0] != Square.X && board.board[1][1] != Square.X && board.board[1][2] != Square.X)
-                    && (board.board[1][0] == Square.O || board.board[1][1] == Square.O || board.board[1][2] == Square.O);
+            boolean rowClear = (board.board[1][0] != them && board.board[1][1] != them && board.board[1][2] != them)
+                    && (board.board[1][0] == me || board.board[1][1] == me || board.board[1][2] == me);
             if (rowClear){
                 return true;
             }
         }
         if (row == 2){
-            boolean rowClear = (board.board[2][0] != Square.X && board.board[2][1] != Square.X && board.board[2][2] != Square.X)
-                    && (board.board[2][0] == Square.O || board.board[2][1] == Square.O || board.board[2][2] == Square.O);
+            boolean rowClear = (board.board[2][0] != them && board.board[2][1] != them && board.board[2][2] != them)
+                    && (board.board[2][0] == me || board.board[2][1] == me || board.board[2][2] == me);
             if (rowClear){
                 return true;
             }
         }
         if (col == 0){
-            boolean colClear = (board.board[0][0] != Square.X && board.board[1][0] != Square.X && board.board[2][0] != Square.X)
-                    && (board.board[0][0] == Square.O || board.board[1][0] == Square.O || board.board[2][0] == Square.O);
+            boolean colClear = (board.board[0][0] != them && board.board[1][0] != them && board.board[2][0] != them)
+                    && (board.board[0][0] == me || board.board[1][0] == me || board.board[2][0] == me);
             if (colClear){
                 return true;
             }
         }
         if (col == 1){
-            boolean colClear = (board.board[0][1] != Square.X && board.board[1][1] != Square.X && board.board[2][1] != Square.X)
-                    && (board.board[0][1] == Square.O || board.board[1][1] == Square.O || board.board[2][1] == Square.O);
+            boolean colClear = (board.board[0][1] != them && board.board[1][1] != them && board.board[2][1] != them)
+                    && (board.board[0][1] == me || board.board[1][1] == me || board.board[2][1] == me);
             if (colClear){
                 return true;
             }
         }
         if (col == 2){
-            boolean colClear = (board.board[0][2] != Square.X && board.board[1][2] != Square.X && board.board[2][2] != Square.X)
-                    && (board.board[0][2] == Square.O || board.board[1][2] == Square.O || board.board[2][2] == Square.O);
+            boolean colClear = (board.board[0][2] != them && board.board[1][2] != them && board.board[2][2] != them)
+                    && (board.board[0][2] == me || board.board[1][2] == me || board.board[2][2] == me);
             if (colClear){
                 return true;
             }
         }
         if (row == col){
-            boolean diagClear = (board.board[0][0] != Square.X && board.board[1][1] != Square.X && board.board[2][2] != Square.X)
-                    && (board.board[0][0] == Square.O || board.board[1][1] == Square.O || board.board[2][2] == Square.O);
+            boolean diagClear = (board.board[0][0] != them && board.board[1][1] != them && board.board[2][2] != them)
+                    && (board.board[0][0] == me || board.board[1][1] == me || board.board[2][2] == me);
             if (diagClear){
                 return true;
             }
         }
         if (row +col == 2){
-            boolean diagClear = (board.board[2][0] != Square.X && board.board[1][1] != Square.X && board.board[0][2] != Square.X)
-                    && (board.board[2][0] == Square.O || board.board[1][1] == Square.O || board.board[0][2] == Square.O);
+            boolean diagClear = (board.board[2][0] != them && board.board[1][1] != them && board.board[0][2] != them)
+                    && (board.board[2][0] == me || board.board[1][1] == me || board.board[0][2] == me);
             if (diagClear){
                 return true;
             }
@@ -156,53 +181,69 @@ public class Ai {
 
     private boolean isGoodMove(int row, int col){
         if (row == 0){
-            boolean rowClear = board.board[0][0] != Square.X && board.board[0][1] != Square.X && board.board[0][2] != Square.X;
+            boolean rowClear = board.board[0][0] != them && board.board[0][1] != them && board.board[0][2] != them;
             if (rowClear){
                 return true;
             }
         }
         if (row == 1){
-            boolean rowClear = board.board[1][0] != Square.X && board.board[1][1] != Square.X && board.board[1][2] != Square.X;
+            boolean rowClear = board.board[1][0] != them && board.board[1][1] != them && board.board[1][2] != them;
             if (rowClear){
                 return true;
             }
         }
         if (row == 2){
-            boolean rowClear = board.board[2][0] != Square.X && board.board[2][1] != Square.X && board.board[2][2] != Square.X;
+            boolean rowClear = board.board[2][0] != them && board.board[2][1] != them && board.board[2][2] != them;
             if (rowClear){
                 return true;
             }
         }
         if (col == 0){
-            boolean colClear = board.board[0][0] != Square.X && board.board[1][0] != Square.X && board.board[2][0] != Square.X;
+            boolean colClear = board.board[0][0] != them && board.board[1][0] != them && board.board[2][0] != them;
             if (colClear){
                 return true;
             }
         }
         if (col == 1){
-            boolean colClear = board.board[0][1] != Square.X && board.board[1][1] != Square.X && board.board[2][1] != Square.X;
+            boolean colClear = board.board[0][1] != them && board.board[1][1] != them && board.board[2][1] != them;
             if (colClear){
                 return true;
             }
         }
         if (col == 2){
-            boolean colClear = board.board[0][2] != Square.X && board.board[1][2] != Square.X && board.board[2][2] != Square.X;
+            boolean colClear = board.board[0][2] != them && board.board[1][2] != them && board.board[2][2] != them;
             if (colClear){
                 return true;
             }
         }
         if (row == col){
-            boolean diagClear = board.board[0][0] != Square.X && board.board[1][1] != Square.X && board.board[2][2] != Square.X;
+            boolean diagClear = board.board[0][0] != them && board.board[1][1] != them && board.board[2][2] != them;
             if (diagClear){
                 return true;
             }
         }
         if (row +col == 2){
-            boolean diagClear = board.board[2][0] != Square.X && board.board[1][1] != Square.X && board.board[0][2] != Square.X;
+            boolean diagClear = board.board[2][0] != them && board.board[1][1] != them && board.board[0][2] != them;
             if (diagClear){
                 return true;
             }
         }
         return false;
+    }
+
+    private void putMe(int row, int col){
+        if (me == Square.X){
+            board.putX(row, col);
+        } else {
+            board.putO(row, col);
+        }
+    }
+
+    private void putThem(int row, int col){
+        if (them == Square.X){
+            board.putX(row, col);
+        } else {
+            board.putO(row, col);
+        }
     }
 }
